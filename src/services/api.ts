@@ -2,10 +2,16 @@ import axios from 'axios';
 
 const API_URL = 'https://product-manage-1gs3.onrender.com/products'; 
 
-export const getProducts = async (page: number = 1, limit: number = 10000) => {
-  const response = await axios.get(`${API_URL}/list`, { params: { page, limit } });
-  return response.data.data;
+export const getProducts = async (page: number = 1, limit: number = 4, search?: string) => {
+  const response = await axios.get(`${API_URL}/list`, {
+    params: { page, limit, search },
+  });
+  return {
+    data: response.data.data.data, 
+    total: response.data.data.total 
+  };
 };
+
 
 export const getProduct = async (id: number) => {
   const response = await axios.get(`${API_URL}/detail/${id}`);

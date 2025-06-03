@@ -11,7 +11,7 @@ export default function Navigation({ currentPage, navigateTo }: NavigationProps)
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo/Title */}
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          SDN_Homework
+          SDN_Assignment_TruongVietHoang
         </h1>
 
         {/* Navigation Buttons */}
