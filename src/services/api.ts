@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://product-manage-1gs3.onrender.com'; 
+const API_URL = 'https://product-manage-1gs3.onrender.com/products'; 
 
 export const getProducts = async (page: number = 1, limit: number = 10000) => {
   const response = await axios.get(`${API_URL}/list`, { params: { page, limit } });
