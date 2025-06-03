@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { ArrowLeft, Upload, X, Check } from 'lucide-react';
-import type { ProductFormData } from '../types/product';
-import { createProduct, updateProduct } from '../services/api';
+import { useState } from "react";
+import { ArrowLeft, Upload, X, Check } from "lucide-react";
+import type { ProductFormData } from "../types/product";
+import { createProduct, updateProduct } from "../services/api";
+import { AlertCircle, XCircle, Loader2 } from "lucide-react";
 
-const API_URL = 'https://product-manage-1gs3.onrender.com';
+const API_URL = "https://product-manage-1gs3.onrender.com";
 
 interface ProductFormProps {
   formData: ProductFormData;
@@ -12,15 +13,55 @@ interface ProductFormProps {
   navigateTo: (page: string) => void;
 }
 
-export default function ProductForm({ formData, setFormData, isEditing, navigateTo }: ProductFormProps) {
+export default function ProductForm({
+  formData,
+  setFormData,
+  isEditing,
+  navigateTo,
+}: ProductFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const validateNumericInput = (value: string, fieldName: string): boolean => {
+    // Allow empty string for optional fields
+    if (value === "") return true;
+
+    // Check if the value contains only numbers (and decimal point for price)
+    const isValidNumber =
+      fieldName === "price" ? /^\d*\.?\d*$/.test(value) : /^\d*$/.test(value);
+
+    if (!isValidNumber) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        [fieldName]: "Please enter numbers only",
+      }));
+      return false;
+    } else {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+      return true;
+    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
+
+    // Validate numeric fields
+    if (["id", "price", "stock"].includes(name)) {
+      if (!validateNumericInput(value, name)) {
+        return; // Don't update state if validation fails
+      }
+    }
+
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -28,7 +69,7 @@ export default function ProductForm({ formData, setFormData, isEditing, navigate
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Hình ảnh không được vượt quá 5MB');
+        setError("Image must not exceed 5MB");
         return;
       }
       setFormData({ ...formData, image: file });
@@ -36,7 +77,7 @@ export default function ProductForm({ formData, setFormData, isEditing, navigate
   };
 
   const handleRemoveImage = () => {
-    setFormData({ ...formData, image: isEditing ? '' : undefined });
+    setFormData({ ...formData, image: isEditing ? "" : undefined });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,26 +85,42 @@ export default function ProductForm({ formData, setFormData, isEditing, navigate
     setError(null);
     setIsLoading(true);
 
-    if (!formData.name || !formData.price || !formData.description || !formData.category) {
-      setError('Vui lòng điền đầy đủ các trường bắt buộc');
+    // Check for validation errors
+    if (Object.keys(fieldErrors).length > 0) {
+      setError("Please fix the validation errors before submitting");
+      setIsLoading(false);
+      return;
+    }
+
+    if (
+      !formData.name ||
+      !formData.price ||
+      !formData.description ||
+      !formData.category
+    ) {
+      setError("Please fill in all required fields");
       setIsLoading(false);
       return;
     }
 
     try {
       const data = new FormData();
-      data.append('id', String(formData.id));
-      data.append('name', formData.name);
-      data.append('price', String(formData.price));
-      data.append('description', formData.description);
-      data.append('category', formData.category);
-      data.append('stock', String(formData.stock || 0));
-      data.append('isActive', String(formData.isActive));
+      data.append("id", String(formData.id));
+      data.append("name", formData.name);
+      data.append("price", String(formData.price));
+      data.append("description", formData.description);
+      data.append("category", formData.category);
+      data.append("stock", String(formData.stock || 0));
+      data.append("isActive", String(formData.isActive));
 
       if (formData.image instanceof File) {
-        data.append('image', formData.image);
-      } else if (isEditing && typeof formData.image === 'string' && formData.image) {
-        data.append('image', formData.image); // Gửi URL ảnh cũ
+        data.append("image", formData.image);
+      } else if (
+        isEditing &&
+        typeof formData.image === "string" &&
+        formData.image
+      ) {
+        data.append("image", formData.image); // Send old image URL
       }
 
       if (isEditing) {
@@ -71,10 +128,15 @@ export default function ProductForm({ formData, setFormData, isEditing, navigate
       } else {
         await createProduct(data);
       }
-      navigateTo('home');
+      navigateTo("home");
     } catch (err: any) {
-      console.error('Error creating/updating product:', err.response?.data || err.message);
-      setError(err.response?.data?.error?.message || err.message || 'Đã xảy ra lỗi');
+      console.error(
+        "Error creating/updating product:",
+        err.response?.data || err.message
+      );
+      setError(
+        err.response?.data?.error?.message || err.message || "An error occurred"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,227 +146,300 @@ export default function ProductForm({ formData, setFormData, isEditing, navigate
     if (formData.image instanceof File) {
       return URL.createObjectURL(formData.image);
     }
-    if (typeof formData.image === 'string' && formData.image) {
-      return `${API_URL}${formData.image}`; // Ghép với API_URL
+    if (typeof formData.image === "string" && formData.image) {
+      return `${API_URL}${formData.image}`; // Concatenate with API_URL
     }
     return null;
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
-      {/* Back Button */}
-      <button
-        onClick={() => navigateTo('home')}
-        className="group flex items-center space-x-2 text-blue-600 hover:text-blue-700 mb-8 transition-all duration-200 ease-in-out"
-        aria-label="Quay lại danh sách sản phẩm"
-      >
-        <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-        <span className="font-medium">Quay lại sản phẩm</span>
-      </button>
+    <div className="bg-[#0f172a] min-h-screen text-white">
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button
+          onClick={() => navigateTo("home")}
+          className="group flex items-center space-x-2 text-white hover:text-indigo-500 mb-8 transition-all duration-300"
+          aria-label="Back to product list"
+        >
+          <ArrowLeft
+            size={24}
+            className="group-hover:-translate-x-1 transition-transform"
+          />
+          <span className="font-medium text-lg">Back to Products</span>
+        </button>
 
-      {/* Form Container */}
-      <div className="bg-white rounded-xl shadow-md p-8 max-w-3xl mx-auto">
-        <h2 className="text-3xl font-extrabold text-gray-900 mb-6 tracking-tight">
-          {isEditing ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
-        </h2>
+        {/* Form Container */}
+        <div className="group bg-gray-900 rounded-2xl shadow-xl p-8 max-w-3xl mx-auto border border-slate-700 group-hover:border-indigo-500 transition-all duration-300">
+          <h2 className="text-4xl font-bold text-white mb-8 tracking-tight">
+            {isEditing ? "Edit Product" : "New Product"}
+          </h2>
 
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-6">
-            <p className="text-red-700 font-medium">{error}</p>
-          </div>
-        )}
-
-        {/* Form Content */}
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Product ID */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="id">
-                Mã sản phẩm <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="id"
-                name="id"
-                value={formData.id}
-                onChange={handleInputChange}
-                disabled={isEditing}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:bg-gray-200 disabled:cursor-not-allowed"
-                required
-              />
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-900/20 border-2 border-red-500 p-4 rounded-xl mb-6 flex items-center space-x-3">
+              <XCircle className="w-6 h-6 text-red-500" />
+              <p className="text-red-500 font-semibold text-lg">{error}</p>
             </div>
+          )}
 
-            {/* Product Name */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="name">
-                Tên sản phẩm <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                required
-              />
-            </div>
-
-            {/* Price */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="price">
-                Giá <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                step="0.01"
-                min="0"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                required
-              />
-            </div>
-
-            {/* Category */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="category">
-                Danh mục <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                required
-              />
-            </div>
-
-            {/* Stock */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="stock">
-                Tồn kho
-              </label>
-              <input
-                type="number"
-                id="stock"
-                name="stock"
-                value={formData.stock}
-                onChange={handleInputChange}
-                min="0"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="description">
-              Mô tả <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={5}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              required
-            />
-          </div>
-
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Hình ảnh sản phẩm</label>
-            <div className="space-y-4">
-              <div className="flex items-center justify-center w-full">
+          {/* Form Content */}
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Product ID */}
+              <div className="space-y-2">
                 <label
-                  htmlFor="image-upload"
-                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-200"
+                  className="block text-base font-medium text-gray-300"
+                  htmlFor="id"
                 >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-10 h-10 mb-3 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-600 font-medium">
-                      <span className="text-blue-600">Nhấn để tải lên</span> hoặc kéo thả
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, hoặc GIF (Tối đa 5MB)</p>
-                  </div>
-                  <input
-                    id="image-upload"
-                    type="file"
-                    className="hidden"
-                    accept="image/png,image/jpeg,image/gif"
-                    onChange={handleImageUpload}
-                  />
+                  Product ID <span className="text-red-500">*</span>
                 </label>
+                <input
+                  type="text"
+                  id="id"
+                  name="id"
+                  value={formData.id}
+                  onChange={handleInputChange}
+                  disabled={isEditing}
+                  className={`w-full px-5 py-3.5 bg-slate-800 rounded-xl border-2 ${
+                    fieldErrors.id ? "border-red-500" : "border-slate-700"
+                  } focus:ring-0 focus:border-indigo-500 focus:shadow-sm transition-all text-white`}
+                />
+                {fieldErrors.id && (
+                  <p className="text-red-500 text-sm font-medium mt-1 flex items-center space-x-1">
+                    <AlertCircle size={14} />
+                    <span>{fieldErrors.id}</span>
+                  </p>
+                )}
               </div>
-              {getImageSrc() ? (
-                <div className="relative inline-block">
-                  <img
-                    src={getImageSrc() || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
-                    alt="Xem trước sản phẩm"
-                    className="w-40 h-40 object-cover rounded-xl shadow-sm"
+
+              {/* Product Name */}
+              <div className="space-y-2">
+                <label
+                  className="block text-base font-medium text-gray-300"
+                  htmlFor="name"
+                >
+                  Product Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full px-5 py-3.5 bg-slate-800 rounded-xl border-2 border-slate-700 focus:border-indigo-500 focus:shadow-sm transition-all text-white"
+                />
+              </div>
+
+              {/* Price */}
+              <div className="space-y-2">
+                <label
+                  className="block text-base font-medium text-gray-300"
+                  htmlFor="price"
+                >
+                  Price <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    $
+                  </span>
+                  <input
+                    type="text"
+                    id="price"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    className={`w-full pl-10 pr-5 py-3.5 bg-slate-800 rounded-xl border-2 ${
+                      fieldErrors.price ? "border-red-500" : "border-slate-700"
+                    } focus:border-indigo-500 focus:shadow-sm transition-all text-white`}
+                    placeholder="0.00"
                   />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-sm"
-                    aria-label="Xóa hình ảnh"
-                  >
-                    <X size={18} />
-                  </button>
                 </div>
-              ) : (
-                <div className="w-40 h-40 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 text-sm">
-                  Không có ảnh
-                </div>
-              )}
+                {fieldErrors.price && (
+                  <p className="text-red-500 text-sm font-medium mt-1 flex items-center space-x-1">
+                    <AlertCircle size={14} />
+                    <span>{fieldErrors.price}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Category */}
+              <div className="space-y-2">
+                <label
+                  className="block text-base font-medium text-gray-300"
+                  htmlFor="category"
+                >
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="category"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
+                  className="w-full px-5 py-3.5 bg-slate-800 rounded-xl border-2 border-slate-700 focus:border-indigo-500 focus:shadow-sm transition-all text-white"
+                />
+              </div>
+
+              {/* Stock */}
+              <div className="space-y-2">
+                <label
+                  className="block text-base font-medium text-gray-300"
+                  htmlFor="stock"
+                >
+                  Stock Quantity
+                </label>
+                <input
+                  type="text"
+                  id="stock"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  className={`w-full px-5 py-3.5 bg-slate-800 rounded-xl border-2 ${
+                    fieldErrors.stock ? "border-red-500" : "border-slate-700"
+                  } focus:border-indigo-500 focus:shadow-sm transition-all text-white`}
+                  placeholder="0"
+                />
+                {fieldErrors.stock && (
+                  <p className="text-red-500 text-sm font-medium mt-1 flex items-center space-x-1">
+                    <AlertCircle size={14} />
+                    <span>{fieldErrors.stock}</span>
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Active Checkbox */}
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="isActive"
-              name="isActive"
-              checked={formData.isActive}
-              onChange={handleInputChange}
-              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-            />
-            <label htmlFor="isActive" className="ml-3 text-sm font-medium text-gray-700">
-              Sản phẩm đang hoạt động
-            </label>
-          </div>
+            {/* Description */}
+            <div className="space-y-2">
+              <label
+                className="block text-base font-medium text-gray-300"
+                htmlFor="description"
+              >
+                Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={5}
+                className="w-full px-5 py-3.5 bg-slate-800 rounded-xl border-2 border-slate-700 focus:border-indigo-500 focus:shadow-sm transition-all text-white resize-none"
+              />
+            </div>
 
-          {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading}
-              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              {isLoading ? (
-                <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-              ) : (
-                <Check size={20} />
-              )}
-              <span>{isEditing ? 'Cập nhật sản phẩm' : 'Tạo sản phẩm'}</span>
-            </button>
-            <button
-              onClick={() => navigateTo('home')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-all duration-200 shadow-sm hover:shadow-md"
-            >
-              Hủy
-            </button>
+            {/* Image Upload */}
+            <div className="space-y-4">
+              <label className="block text-base font-medium text-gray-300">
+                Product Image
+              </label>
+              <div className="space-y-6">
+                <div className="flex items-center justify-center w-full">
+                  <label
+                    htmlFor="image-upload"
+                    className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer bg-slate-800 hover:bg-slate-700/50 hover:border-indigo-500 transition-all duration-300 group"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 space-y-3">
+                      <Upload className="w-12 h-12 text-gray-400 group-hover:text-white transition-colors" />
+                      <div className="text-center space-y-1">
+                        <p className="text-base font-medium text-gray-400 group-hover:text-white transition-colors">
+                          Drag & drop or{" "}
+                          <span className="text-white">browse files</span>
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          PNG, JPG, GIF (max 5MB)
+                        </p>
+                      </div>
+                    </div>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/gif"
+                      onChange={handleImageUpload}
+                    />
+                  </label>
+                </div>
+
+                {getImageSrc() ? (
+                  <div className="relative group">
+                    <div className="relative w-40 h-40 rounded-2xl overflow-hidden shadow-lg border border-slate-700 group-hover:border-indigo-500">
+                      <img
+                        src={getImageSrc()!}
+                        alt="Product preview"
+                        className="w-full h-full object-cover transform transition-transform group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <X className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                      aria-label="Remove image"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-40 h-40 bg-slate-800 rounded-2xl flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-slate-700">
+                    No image selected
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Active Checkbox */}
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center h-5">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  name="isActive"
+                  checked={formData.isActive}
+                  onChange={handleInputChange}
+                  className="w-5 h-5 text-indigo-500 border-2 border-slate-700 rounded-lg focus:ring-indigo-500 focus:ring-2 transition-all"
+                />
+              </div>
+              <label
+                htmlFor="isActive"
+                className="text-base font-medium text-gray-300"
+              >
+                Product is active
+              </label>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 pt-8 border-t border-slate-700">
+              <button
+                onClick={handleSubmit}
+                disabled={isLoading || Object.keys(fieldErrors).length > 0}
+                className={`flex-1 bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl flex items-center justify-center space-x-3 transition-all duration-300 ${
+                  isLoading || Object.keys(fieldErrors).length > 0
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:scale-[1.02]"
+                }`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="text-lg">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={20} className="flex-shrink-0" />
+                    <span className="text-lg">
+                      {isEditing ? "Update Product" : "Create Product"}
+                    </span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => navigateTo("home")}
+                className="px-8 py-4 border-2 border-slate-700 text-gray-300 rounded-xl hover:bg-slate-700/50 hover:border-indigo-500 transition-all duration-300 hover:scale-[1.02]"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       </div>

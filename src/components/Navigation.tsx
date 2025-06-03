@@ -1,4 +1,4 @@
-import { Home, Plus } from 'lucide-react';
+import { Home, PackagePlus } from 'lucide-react';
 
 interface NavigationProps {
   currentPage: string;
@@ -7,11 +7,11 @@ interface NavigationProps {
 
 export default function Navigation({ currentPage, navigateTo }: NavigationProps) {
   return (
-    <nav className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-4 px-4 sm:px-6 shadow-lg sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-4 px-4 sm:px-6 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo/Title */}
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          Product Manager
+          SDN_Homework
         </h1>
 
         {/* Navigation Buttons */}
@@ -37,7 +37,7 @@ export default function Navigation({ currentPage, navigateTo }: NavigationProps)
             }`}
             aria-label="Add new product"
           >
-            <Plus size={20} />
+            <PackagePlus size={20} />
             <span className="hidden sm:inline">Add Product</span>
           </button>
         </div>
