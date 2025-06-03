@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ArrowLeft, Upload, X, Check } from "lucide-react";
 import type { ProductFormData } from "../types/product";
 import { createProduct, updateProduct } from "../services/api";
@@ -65,6 +65,8 @@ export default function ProductForm({
     });
   };
 
+  const imageInputRef = useRef<HTMLInputElement>(null); // Tạo ref cho input file
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -78,6 +80,9 @@ export default function ProductForm({
 
   const handleRemoveImage = () => {
     setFormData({ ...formData, image: isEditing ? "" : undefined });
+    if (imageInputRef.current) {
+      imageInputRef.current.value = ""; // Reset input file
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -327,53 +332,62 @@ export default function ProductForm({
             </div>
 
             {/* Image Upload */}
-            <div>Add commentMore actions
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Hình ảnh sản phẩm</label>
-            <div className="space-y-4">
-              <div className="flex items-center justify-center w-full">
-                <label
-                  htmlFor="image-upload"
-                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-200"
-                >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-10 h-10 mb-3 text-gray-400" />
-                    <p className="mb-2 text-sm text-gray-600 font-medium">
-                      <span className="text-blue-600">Nhấn để tải lên</span> hoặc kéo thả
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, hoặc GIF (Tối đa 5MB)</p>
-                  </div>
-                  <input
-                    id="image-upload"
-                    type="file"
-                    className="hidden"
-                    accept="image/png,image/jpeg,image/gif"
-                    onChange={handleImageUpload}
-                  />
-                </label>
-              </div>
-              {getImageSrc() ? (
-                <div className="relative inline-block">
-                  <img
-                    src={getImageSrc() || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
-                    alt="Xem trước sản phẩm"
-                    className="w-40 h-40 object-cover rounded-xl shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-sm"
-                    aria-label="Xóa hình ảnh"
+            <div>
+              <label className="block text-base font-medium text-gray-300 mb-2">
+                Product Image
+              </label>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center w-full">
+                  <label
+                    htmlFor="image-upload"
+                    className="flex flex-col items-center justify-center w-full h-40 border-2 border-slate-700 rounded-xl cursor-pointer bg-slate-800 hover:bg-slate-700/50 transition-all duration-200"
                   >
-                    <X size={18} />
-                  </button>
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-300 font-medium">
+                        <span className="text-indigo-500">Click to upload</span>{" "}
+                        or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        PNG, JPG, or GIF (Max 5MB)
+                      </p>
+                    </div>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/gif"
+                      onChange={handleImageUpload}
+                      ref={imageInputRef}
+                    />
+                  </label>
                 </div>
-              ) : (
-                <div className="w-40 h-40 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 text-sm">
-                  Không có ảnh
-                </div>
-              )}
+                {getImageSrc() ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={
+                        getImageSrc() ||
+                        "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg"
+                      }
+                      alt="Product preview"
+                      className="w-40 h-40 object-cover rounded-xl shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-sm"
+                      aria-label="Remove image"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-40 h-40 bg-slate-800 rounded-xl flex items-center justify-center text-gray-400 text-sm">
+                    No image
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
             {/* Active Checkbox */}
             <div className="flex items-center space-x-3">
