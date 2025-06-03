@@ -327,66 +327,53 @@ export default function ProductForm({
             </div>
 
             {/* Image Upload */}
+            <div>Add commentMore actions
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Hình ảnh sản phẩm</label>
             <div className="space-y-4">
-              <label className="block text-base font-medium text-gray-300">
-                Product Image
-              </label>
-              <div className="space-y-6">
-                <div className="flex items-center justify-center w-full">
-                  <label
-                    htmlFor="image-upload"
-                    className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-700 rounded-2xl cursor-pointer bg-slate-800 hover:bg-slate-700/50 hover:border-indigo-500 transition-all duration-300 group"
-                  >
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6 space-y-3">
-                      <Upload className="w-12 h-12 text-gray-400 group-hover:text-white transition-colors" />
-                      <div className="text-center space-y-1">
-                        <p className="text-base font-medium text-gray-400 group-hover:text-white transition-colors">
-                          Drag & drop or{" "}
-                          <span className="text-white">browse files</span>
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          PNG, JPG, GIF (max 5MB)
-                        </p>
-                      </div>
-                    </div>
-                    <input
-                      id="image-upload"
-                      type="file"
-                      className="hidden"
-                      accept="image/png,image/jpeg,image/gif"
-                      onChange={handleImageUpload}
-                    />
-                  </label>
-                </div>
-
-                {getImageSrc() ? (
-                  <div className="relative group">
-                    <div className="relative w-40 h-40 rounded-2xl overflow-hidden shadow-lg border border-slate-700 group-hover:border-indigo-500">
-                      <img
-                        src={getImageSrc()!}
-                        alt="Product preview"
-                        className="w-full h-full object-cover transform transition-transform group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <X className="w-8 h-8 text-white" />
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
-                      aria-label="Remove image"
-                    >
-                      <X size={20} />
-                    </button>
+              <div className="flex items-center justify-center w-full">
+                <label
+                  htmlFor="image-upload"
+                  className="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-all duration-200"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload className="w-10 h-10 mb-3 text-gray-400" />
+                    <p className="mb-2 text-sm text-gray-600 font-medium">
+                      <span className="text-blue-600">Nhấn để tải lên</span> hoặc kéo thả
+                    </p>
+                    <p className="text-xs text-gray-500">PNG, JPG, hoặc GIF (Tối đa 5MB)</p>
                   </div>
-                ) : (
-                  <div className="w-40 h-40 bg-slate-800 rounded-2xl flex items-center justify-center text-gray-400 text-sm border-2 border-dashed border-slate-700">
-                    No image selected
-                  </div>
-                )}
+                  <input
+                    id="image-upload"
+                    type="file"
+                    className="hidden"
+                    accept="image/png,image/jpeg,image/gif"
+                    onChange={handleImageUpload}
+                  />
+                </label>
               </div>
+              {getImageSrc() ? (
+                <div className="relative inline-block">
+                  <img
+                    src={getImageSrc() || 'https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg'}
+                    alt="Xem trước sản phẩm"
+                    className="w-40 h-40 object-cover rounded-xl shadow-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-sm"
+                    aria-label="Xóa hình ảnh"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-40 h-40 bg-gray-100 rounded-xl flex items-center justify-center text-gray-500 text-sm">
+                  Không có ảnh
+                </div>
+              )}
             </div>
+          </div>
 
             {/* Active Checkbox */}
             <div className="flex items-center space-x-3">
