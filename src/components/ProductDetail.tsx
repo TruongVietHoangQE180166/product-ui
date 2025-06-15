@@ -7,12 +7,14 @@ interface ProductDetailProps {
   product: Product;
   navigateTo: (page: string, product?: Product) => void;
   confirmDelete: (product: Product) => void;
+  isLoggedIn: boolean;
 }
 
 export default function ProductDetail({
   product,
   navigateTo,
   confirmDelete,
+  isLoggedIn,
 }: ProductDetailProps) {
   const getImageSrc = () => {
     if (product.image instanceof File) {
@@ -111,25 +113,39 @@ export default function ProductDetail({
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={() => navigateTo("form", product)}
-                className="flex-1 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3.5 rounded-lg flex items-center justify-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium"
-                aria-label="Edit product"
-              >
-                <Edit3 size={20} />
-                <span>Edit Product</span>
-              </button>
-              <button
-                onClick={() => confirmDelete(product)}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white px-6 py-3.5 rounded-lg flex items-center justify-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium"
-                aria-label="Delete product"
-              >
-                <Trash2 size={20} />
-                <span>Delete Product</span>
-              </button>
-            </div>
+            {/* Action Buttons hoặc Login Message */}
+            {isLoggedIn ? (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button
+                  onClick={() => navigateTo("form", product)}
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white px-6 py-3.5 rounded-lg flex items-center justify-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium"
+                  aria-label="Edit product"
+                >
+                  <Edit3 size={20} />
+                  <span>Edit Product</span>
+                </button>
+                <button
+                  onClick={() => confirmDelete(product)}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-6 py-3.5 rounded-lg flex items-center justify-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.02] font-medium"
+                  aria-label="Delete product"
+                >
+                  <Trash2 size={20} />
+                  <span>Delete Product</span>
+                </button>
+              </div>
+            ) : (
+              <div className="bg-slate-700/30 border border-slate-600 rounded-lg p-4 text-center">
+                <p className="text-gray-300 text-sm sm:text-base">
+                  <button
+                    onClick={() => navigateTo("login")}
+                    className="text-indigo-400 font-medium hover:text-indigo-300 hover:underline transition-colors duration-200"
+                  >
+                    Login
+                  </button>
+                  {" "}to manage this product
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -12,20 +12,23 @@ import {
   SearchX
 } from "lucide-react";
 import ProductCard from "../components/ProductCard";
-import DeleteModal from "../components/DeleteModal"; // Import modal xóa
+import DeleteModal from "../components/DeleteModal";
 import type { Product } from "../types/product";
 import { getProducts, deleteProduct } from "../services/api";
+
 
 interface HomePageProps {
   products: Product[];
   setProducts: (products: Product[]) => void;
   navigateTo: (page: string, product?: Product) => void;
+  isLoggedIn: boolean; 
 }
 
 export default function HomePage({
   products,
   setProducts,
   navigateTo,
+  isLoggedIn 
 }: HomePageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +112,6 @@ export default function HomePage({
   return (
     <div className="bg-[#0f172a] min-h-screen text-white">
       <div className="container mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        {/* Header Section */}
         <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
             <h1 className="text-4xl font-bold tracking-tight">
@@ -119,16 +121,17 @@ export default function HomePage({
               Efficient inventory control system
             </p>
           </div>
-          <button
-            onClick={() => navigateTo("form")}
-            className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-lg"
-          >
-            <PackagePlus size={24} />
-            <span className="text-lg font-semibold">New Product</span>
-          </button>
+          {isLoggedIn && ( 
+            <button
+              onClick={() => navigateTo("form")}
+              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-lg"
+            >
+              <PackagePlus size={24} />
+              <span className="text-lg font-semibold">New Product</span>
+            </button>
+          )}
         </div>
 
-        {/* Search Bar */}
         <div className="mb-8 relative">
           <Search className="absolute left-4 top-3.5 text-gray-400" />
           <input
@@ -140,27 +143,23 @@ export default function HomePage({
           />
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex justify-center items-center h-64">
             <Loader2 className="h-14 w-14 animate-spin text-white/80" />
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="bg-red-100 border border-red-400 p-6 rounded-xl text-center shadow-sm text-red-900">
             <p className="font-semibold text-lg">{error}</p>
           </div>
         )}
 
-        {/* Product List */}
         {!loading && !error && (
           <div className="space-y-8">
             {products.length === 0 ? (
               <div className="text-center py-24 bg-slate-800 rounded-2xl shadow-lg border border-slate-700">
                 {isSearching ? (
-                  // Search Not Found Section
                   <>
                     <div className="mx-auto w-24 h-24 rounded-full bg-red-500/10 flex items-center justify-center mb-6">
                       <SearchX size={64} className="text-red-400" />
@@ -181,17 +180,18 @@ export default function HomePage({
                         <BrushCleaning size={20} />
                         Clear Filters
                       </button>
-                      <button
-                        onClick={() => navigateTo("form")}
-                        className="px-6 py-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-gray-300 hover:text-white font-medium flex items-center justify-center gap-2 transition-colors"
-                      >
-                        <PackagePlus size={20} />
-                        Add New Product
-                      </button>
+                      {isLoggedIn && (
+                        <button
+                          onClick={() => navigateTo("form")}
+                          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-gray-300 hover:text-white font-medium flex items-center justify-center gap-2 transition-colors"
+                        >
+                          <PackagePlus size={20} />
+                          Add New Product
+                        </button>
+                      )}
                     </div>
                   </>
                 ) : (
-                  // Inventory Empty Section
                   <>
                     <div className="mx-auto w-24 h-24 rounded-full bg-indigo-500/10 flex items-center justify-center mb-6">
                       <Package size={64} className="text-indigo-400" />
@@ -203,13 +203,15 @@ export default function HomePage({
                       Your product catalog is currently empty. Start by adding
                       your first item
                     </p>
-                    <button
-                      onClick={() => navigateTo("form")}
-                      className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 mx-auto transition-colors"
-                    >
-                      <PackagePlus size={20} />
-                      Add First Product
-                    </button>
+                    {isLoggedIn && (
+                      <button
+                        onClick={() => navigateTo("form")}
+                        className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white font-medium flex items-center justify-center gap-2 mx-auto transition-colors"
+                      >
+                        <PackagePlus size={20} />
+                        Add First Product
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -225,27 +227,27 @@ export default function HomePage({
                         product={product}
                         navigateTo={navigateTo}
                         confirmDelete={openDeleteModal}
+                        isLoggedIn={isLoggedIn} 
                       />
                       <div className="absolute inset-0 border border-transparent group-hover:border-indigo-500 rounded-2xl pointer-events-none" />
                     </div>
                   ))}
                 </div>
 
-                {/* Pagination - Always show even with 1 page */}
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12 px-4 py-3 bg-slate-800 rounded-xl border border-slate-700">
-                  <div className="text-sm text-gray-300">
-                    Showing{" "}
-                    <span className="font-medium">
-                      {(page - 1) * limit + 1}
-                    </span>{" "}
-                    to{" "}
-                    <span className="font-medium">
-                      {Math.min(page * limit, total)}
-                    </span>{" "}
-                    of <span className="font-medium">{total}</span> products
-                  </div>
+                {totalPages > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12 px-4 py-3 bg-slate-800 rounded-xl border border-slate-700">
+                    <div className="text-sm text-gray-300">
+                      Showing{" "}
+                      <span className="font-medium">
+                        {(page - 1) * limit + 1}
+                      </span>{" "}
+                      to{" "}
+                      <span className="font-medium">
+                        {Math.min(page * limit, total)}
+                      </span>{" "}
+                      of <span className="font-medium">{total}</span> products
+                    </div>
 
-                  {totalPages > 0 && (
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => setPage(1)}
@@ -307,15 +309,14 @@ export default function HomePage({
                         <ChevronsRight size={18} />
                       </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </>
             )}
           </div>
         )}
       </div>
 
-      {/* Delete Modal */}
       <DeleteModal
         show={showDeleteModal}
         product={productToDelete}

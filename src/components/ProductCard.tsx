@@ -7,9 +7,10 @@ interface ProductCardProps {
   product: Product;
   navigateTo: (page: string, product?: Product) => void;
   confirmDelete: (product: Product) => void;
+  isLoggedIn: boolean;
 }
 
-export default function ProductCard({ product, navigateTo, confirmDelete }: ProductCardProps) {
+export default function ProductCard({ product, navigateTo, confirmDelete, isLoggedIn }: ProductCardProps) {
   
   const getImageSrc = () => {
     if (product.image instanceof File) {
@@ -33,16 +34,16 @@ export default function ProductCard({ product, navigateTo, confirmDelete }: Prod
       <div className="absolute top-3 right-3">
         <span
           className={`px-2.5 py-1 rounded-full text-xs font-medium shadow-lg ${
-            product.isActive 
-              ? 'bg-green-400 text-green-800 border border-green-500' 
-              : 'bg-red-400 text-red-800 border border-red-500'
+            product.isActive
+               ? 'bg-green-400 text-green-800 border border-green-500'
+               : 'bg-red-400 text-red-800 border border-red-500'
           }`}
         >
           {product.isActive ? 'Active' : 'Inactive'}
         </span>
       </div>
     </div>
-           
+                
     {/* Content Section */}
     <div className="p-5 sm:p-6">
       <h3 className="text-lg sm:text-xl font-semibold text-white mb-2 line-clamp-1">
@@ -57,6 +58,7 @@ export default function ProductCard({ product, navigateTo, confirmDelete }: Prod
         </span>
         <span className="text-sm text-gray-400 font-medium">Stock: {product.stock}</span>
       </div>
+      
       <div className="flex flex-col sm:flex-row sm:space-x-3 space-y-3 sm:space-y-0">
         <button
           onClick={() => navigateTo('detail', product)}
@@ -66,22 +68,25 @@ export default function ProductCard({ product, navigateTo, confirmDelete }: Prod
           <Eye size={18} />
           <span>View</span>
         </button>
-        <div className="flex space-x-3">
-          <button
-            onClick={() => navigateTo('form', product)}
-            className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]"
-            aria-label="Edit product"
-          >
-            <Edit3 size={18} />
-          </button>
-          <button
-            onClick={() => confirmDelete(product)}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]"
-            aria-label="Delete product"
-          >
-            <Trash2 size={18} />
-          </button>
-        </div>
+        
+        {isLoggedIn && (
+          <div className="flex space-x-3">
+            <button
+              onClick={() => navigateTo('form', product)}
+              className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]"
+              aria-label="Edit product"
+            >
+              <Edit3 size={18} />
+            </button>
+            <button
+              onClick={() => confirmDelete(product)}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-lg flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md hover:scale-[1.02]"
+              aria-label="Delete product"
+            >
+              <Trash2 size={18} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   </div>
