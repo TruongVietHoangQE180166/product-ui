@@ -1,15 +1,18 @@
+// App.tsx (Updated)
 import { useState, useEffect } from 'react';
 import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import CartPage from './pages/CartPage';
+import OrdersPage from './pages/OrdersPage';
 import ProductDetail from './components/ProductDetail';
 import ProductForm from './components/ProductForm';
 import DeleteModal from './components/DeleteModal';
 import type { Product, ProductFormData } from './types/product';
 import { deleteProduct } from './services/api';
 import { isAuthenticated } from './services/auth';
-
+import { Toaster } from 'react-hot-toast';
 export default function App() {
   const [currentPage, setCurrentPage] = useState('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -43,7 +46,8 @@ export default function App() {
   };
 
   const navigateTo = (page: string, product: Product | null = null) => {
-    if (page === 'form' && !isAuthenticated()) {
+    // Check authentication for protected pages
+    if ((page === 'form' || page === 'orders') && !isAuthenticated()) {
       setCurrentPage('login');
       return;
     }
@@ -114,6 +118,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+    <Toaster position="top-center" reverseOrder={false} />
       <Navigation 
         currentPage={currentPage} 
         navigateTo={navigateTo}
@@ -143,6 +148,14 @@ export default function App() {
           navigateTo={navigateTo}
           onAuthSuccess={handleAuthSuccess}
         />
+      )}
+
+      {currentPage === 'cart' && (
+        <CartPage navigateTo={navigateTo} />
+      )}
+
+      {currentPage === 'orders' && isLoggedIn && (
+        <OrdersPage navigateTo={navigateTo} />
       )}
       
       {currentPage === 'detail' && selectedProduct && (

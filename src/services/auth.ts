@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 const API_URL = 'https://product-manage-1gs3.onrender.com/auth';
 
 interface JWTPayload {
+  _id:string;
   email: string;
   role: string;
   iat: number;
@@ -23,6 +24,7 @@ export interface RegisterData {
 export interface AuthResponse {
   token: string;
   user: {
+    _id:string;
     email: string;
     role: string;
   };
@@ -67,6 +69,7 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
     return {
       token: response.data.data.token,
       user: {
+        _id:payload._id,
         email: payload.email,
         role: payload.role
       }
@@ -127,6 +130,7 @@ export const getCurrentUser = () => {
   try {
     const payload = decodeJWT(token);
     const user = {
+      _id:payload._id,
       email: payload.email,
       role: payload.role
     };
