@@ -1,7 +1,7 @@
 // components/Navigation.tsx (Updated)
 import { useState } from 'react';
 import { Home, PackagePlus, LogIn, UserPlus, LogOut, User, ShoppingCart, Package } from 'lucide-react';
-import { isAuthenticated, getCurrentUser, logout } from '../services/auth';
+import { getCurrentUser, logout } from '../services/auth';
 import { useCart } from '../services/cart';
 import LogoutModal from './LogoutModal';
 
